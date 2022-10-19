@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -39,7 +40,7 @@ public static class Build
         if (report.summary.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
         {
             Debug.Log("===ContinuousIntegration script build failed:");
-            // Debug.Log($"{JsonConvert.SerializeObject(report)}");
+            Debug.Log($"{JsonConvert.SerializeObject(report)}");
             var msgs = report.steps.Select(x => $"{x.name}:\n{string.Join("\n", x.messages)}");
             throw new UnityException(string.Join("\n", msgs));
         }
