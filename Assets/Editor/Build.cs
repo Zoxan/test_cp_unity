@@ -1,9 +1,14 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using Newtonsoft.Json;
 using UnityEditor;
+using UnityEditor.Android;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -12,11 +17,38 @@ public static class Build
     public static void BuildAndroid()
     {
         Debug.Log("===build");
+        DownloadGradle611();
         Bld();
         EditorApplication.Exit(0);
-        // "asdf".Bash
     }
 
+    [MenuItem("test/install gradle")]
+    public static void DownloadGradle611()
+    {
+        Debug.Log("===Download 1");
+        string projPath = Application.dataPath.Replace("/Assets", "");
+        string folderPath = Path.Combine(projPath, "gradle");
+        string archiveUrl = "https://services.gradle.org/distributions/gradle-6.1.1-bin.zip";
+        string archiveName = projPath + "/Temp/gradle.zip";
+
+        if (!Directory.Exists(folderPath))
+        {
+            Debug.Log("===Download 2");
+            using (var client = new WebClient())
+            {
+                client.DownloadFile(archiveUrl, archiveName);
+            }
+            Debug.Log("===Download 3");
+            ZipFile.ExtractToDirectory(archiveName, folderPath);
+            AndroidExternalToolsSettings.gradlePath = folderPath + "/gradle-6.1.1";
+            Debug.Log("===Download 4");
+        }
+
+        if (!Directory.Exists(folderPath))
+        {
+            throw new UnityException("Can't download gradle 6.1.1");
+        }
+    }
 
     private static void Bld()
     {
@@ -44,24 +76,5 @@ public static class Build
             var msgs = report.steps.Select(x => $"{x.name}:\n{string.Join("\n", x.messages)}");
             throw new UnityException(string.Join("\n", msgs));
         }
-    }
-
-    private static void InstallGradle611()
-    {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "bash",
-                Arguments = "echo \"asdf\" > test.txt" ,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            },
-            EnableRaisingEvents = true
-        };
-        process.Start();
-        process.WaitForExit(60*1000);
     }
 }
